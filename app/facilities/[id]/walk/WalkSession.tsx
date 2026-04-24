@@ -409,7 +409,7 @@ export function WalkSession({
   // (e.g. burst uploads completing) don't re-trigger it.
   useEffect(() => {
     if (transitionDir === null) return;
-    const t = setTimeout(() => setTransitionDir(null), 520);
+    const t = setTimeout(() => setTransitionDir(null), 1450);
     return () => clearTimeout(t);
   }, [transitionDir, current?.id]);
 
@@ -647,9 +647,9 @@ export function WalkSession({
             className={cn(
               "w-full bg-black/40 backdrop-blur-md border border-white/10 rounded-[var(--radius-md)] px-3.5 py-2.5 flex items-center gap-3 text-left active:scale-[0.99] transition-transform",
               transitionDir === "forward" &&
-                "animate-[slideInRight_320ms_cubic-bezier(0.22,1,0.36,1)]",
+                "animate-[slideInRight_450ms_cubic-bezier(0.22,1,0.36,1)]",
               transitionDir === "back" &&
-                "animate-[slideInLeft_320ms_cubic-bezier(0.22,1,0.36,1)]",
+                "animate-[slideInLeft_450ms_cubic-bezier(0.22,1,0.36,1)]",
             )}
             aria-label="Open facility map"
           >
@@ -700,8 +700,8 @@ export function WalkSession({
                 className={cn(
                   "bg-black/70 backdrop-blur-md border border-white/15 px-5 py-3 rounded-[var(--radius-lg)] text-center shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
                   transitionDir === "forward"
-                    ? "animate-[flipBadgeRight_500ms_cubic-bezier(0.22,1,0.36,1)_forwards]"
-                    : "animate-[flipBadgeLeft_500ms_cubic-bezier(0.22,1,0.36,1)_forwards]",
+                    ? "animate-[flipBadgeRight_1400ms_cubic-bezier(0.22,1,0.36,1)_forwards]"
+                    : "animate-[flipBadgeLeft_1400ms_cubic-bezier(0.22,1,0.36,1)_forwards]",
                 )}
               >
                 <div className="text-[10px] uppercase tracking-[0.1em] font-mono text-white/60">
@@ -722,9 +722,9 @@ export function WalkSession({
               className={cn(
                 "absolute top-3 right-3 w-[110px] flex flex-col gap-1",
                 transitionDir === "forward" &&
-                  "animate-[slideInRight_320ms_cubic-bezier(0.22,1,0.36,1)]",
+                  "animate-[slideInRight_450ms_cubic-bezier(0.22,1,0.36,1)]",
                 transitionDir === "back" &&
-                  "animate-[slideInLeft_320ms_cubic-bezier(0.22,1,0.36,1)]",
+                  "animate-[slideInLeft_450ms_cubic-bezier(0.22,1,0.36,1)]",
               )}
             >
               <div className="flex items-center gap-1 text-[9px] uppercase tracking-[0.08em] font-mono text-white/80 bg-black/55 backdrop-blur-sm px-1.5 py-0.5 rounded-sm w-fit">
@@ -769,9 +769,9 @@ export function WalkSession({
               className={cn(
                 "flex gap-2 overflow-x-auto pb-2 mb-2 -mx-1 px-1",
                 transitionDir === "forward" &&
-                  "animate-[slideInRight_320ms_cubic-bezier(0.22,1,0.36,1)]",
+                  "animate-[slideInRight_450ms_cubic-bezier(0.22,1,0.36,1)]",
                 transitionDir === "back" &&
-                  "animate-[slideInLeft_320ms_cubic-bezier(0.22,1,0.36,1)]",
+                  "animate-[slideInLeft_450ms_cubic-bezier(0.22,1,0.36,1)]",
               )}
             >
               {currentBurst.map((p) => (
@@ -928,40 +928,53 @@ export function WalkSession({
             transform: translateX(0);
           }
         }
+        /*
+          flipBadge holds for ~900ms of the 1400ms total so the waypoint
+          label is actually readable. Arrive fast (ease-out), sit still,
+          leave gently.
+        */
         @keyframes flipBadgeRight {
           0% {
             opacity: 0;
-            transform: translateX(90px) scale(0.85) rotate(6deg);
+            transform: translateX(90px) scale(0.88) rotate(5deg);
           }
-          35% {
+          18% {
             opacity: 1;
-            transform: translateX(0) scale(1.04) rotate(-1deg);
+            transform: translateX(0) scale(1.03) rotate(-1deg);
           }
-          60% {
+          26% {
+            opacity: 1;
+            transform: translateX(0) scale(1) rotate(0deg);
+          }
+          75% {
             opacity: 1;
             transform: translateX(0) scale(1) rotate(0deg);
           }
           100% {
             opacity: 0;
-            transform: translateX(-30px) scale(0.96) rotate(0deg);
+            transform: translateX(-24px) scale(0.97) rotate(0deg);
           }
         }
         @keyframes flipBadgeLeft {
           0% {
             opacity: 0;
-            transform: translateX(-90px) scale(0.85) rotate(-6deg);
+            transform: translateX(-90px) scale(0.88) rotate(-5deg);
           }
-          35% {
+          18% {
             opacity: 1;
-            transform: translateX(0) scale(1.04) rotate(1deg);
+            transform: translateX(0) scale(1.03) rotate(1deg);
           }
-          60% {
+          26% {
+            opacity: 1;
+            transform: translateX(0) scale(1) rotate(0deg);
+          }
+          75% {
             opacity: 1;
             transform: translateX(0) scale(1) rotate(0deg);
           }
           100% {
             opacity: 0;
-            transform: translateX(30px) scale(0.96) rotate(0deg);
+            transform: translateX(24px) scale(0.97) rotate(0deg);
           }
         }
       `}</style>
