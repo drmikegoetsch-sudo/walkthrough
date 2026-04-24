@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Camera, Play } from "lucide-react";
+import { CheckCircle2, Camera, ChevronDown, Play } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
 import { FacilityMenu } from "./FacilityMenu";
 
 type CompletedSession = {
@@ -38,6 +42,7 @@ export function FacilityCard({
   waypointCount,
   completedSessions,
 }: Props) {
+  const [open, setOpen] = useState(true);
   const visible = completedSessions.slice(0, MAX_VISIBLE);
   const extra = completedSessions.length - visible.length;
 
@@ -98,10 +103,27 @@ export function FacilityCard({
       {completedSessions.length > 0 ? (
         <div className="px-5 pb-3 -mt-1">
           <div className="flex items-center justify-between mb-1.5 pl-[56px]">
-            <span className="text-[10px] uppercase tracking-[0.08em] text-ink-3 font-mono">
-              Completed walkthroughs
-            </span>
-            {extra > 0 ? (
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              className="flex items-center gap-1.5 text-ink-3 hover:text-ink-2 transition-colors -ml-1 px-1 py-0.5 rounded"
+            >
+              <ChevronDown
+                size={12}
+                className={cn(
+                  "transition-transform",
+                  !open && "-rotate-90",
+                )}
+              />
+              <span className="text-[10px] uppercase tracking-[0.08em] font-mono">
+                Completed walkthroughs
+              </span>
+              <span className="text-[10px] font-mono text-ink-4">
+                {completedSessions.length}
+              </span>
+            </button>
+            {open && extra > 0 ? (
               <Link
                 href={`/facilities/${id}/review`}
                 className="text-[10px] text-ink-3 hover:text-ink-2 font-mono"
@@ -110,46 +132,48 @@ export function FacilityCard({
               </Link>
             ) : null}
           </div>
-          <ul className="pl-[56px] flex flex-col relative">
-            <span
-              aria-hidden
-              className="absolute left-[50px] top-[14px] bottom-[14px] w-px bg-surface-3"
-            />
-            {visible.map((s) => {
-              const d = new Date(s.completed_at);
-              return (
-                <li key={s.id} className="relative">
-                  <span
-                    aria-hidden
-                    className="absolute left-[-9px] top-[10px] w-1.5 h-1.5 rounded-full bg-success ring-2 ring-white"
-                  />
-                  <Link
-                    href={`/facilities/${id}/review?session=${s.id}`}
-                    className="group flex items-center gap-2 py-1 text-xs text-ink-2 hover:text-ink transition-colors"
-                  >
-                    <CheckCircle2
-                      size={12}
-                      className="text-success flex-shrink-0"
+          {open ? (
+            <ul className="pl-[56px] flex flex-col relative">
+              <span
+                aria-hidden
+                className="absolute left-[50px] top-[14px] bottom-[14px] w-px bg-surface-3"
+              />
+              {visible.map((s) => {
+                const d = new Date(s.completed_at);
+                return (
+                  <li key={s.id} className="relative">
+                    <span
+                      aria-hidden
+                      className="absolute left-[-9px] top-[10px] w-1.5 h-1.5 rounded-full bg-success ring-2 ring-white"
                     />
-                    <span className="font-medium">
-                      {dateFormatter.format(d)}
-                    </span>
-                    <span className="text-ink-3 font-mono text-[10px]">
-                      {timeFormatter.format(d)}
-                    </span>
-                    <span className="text-ink-4">·</span>
-                    <span className="text-ink-3 font-mono text-[10px] flex items-center gap-0.5">
-                      <Camera size={10} />
-                      {s.photo_count}
-                    </span>
-                    <span className="ml-auto text-[10px] font-medium text-accent group-hover:text-accent-2 transition-colors">
-                      Review →
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                    <Link
+                      href={`/facilities/${id}/review?session=${s.id}`}
+                      className="group flex items-center gap-2 py-1 text-xs text-ink-2 hover:text-ink transition-colors"
+                    >
+                      <CheckCircle2
+                        size={12}
+                        className="text-success flex-shrink-0"
+                      />
+                      <span className="font-medium">
+                        {dateFormatter.format(d)}
+                      </span>
+                      <span className="text-ink-3 font-mono text-[10px]">
+                        {timeFormatter.format(d)}
+                      </span>
+                      <span className="text-ink-4">·</span>
+                      <span className="text-ink-3 font-mono text-[10px] flex items-center gap-0.5">
+                        <Camera size={10} />
+                        {s.photo_count}
+                      </span>
+                      <span className="ml-auto text-[10px] font-medium text-accent group-hover:text-accent-2 transition-colors">
+                        Review →
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
         </div>
       ) : null}
     </div>
