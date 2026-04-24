@@ -547,7 +547,10 @@ export function WalkSession({
   const prevLabel = index > 0 ? waypoints[index - 1].label : null;
 
   return (
-    <main className="fixed inset-0 bg-black text-white overflow-hidden">
+    <main
+      className="fixed inset-x-0 top-0 bg-black text-white overflow-hidden"
+      style={{ height: "100dvh" }}
+    >
       {/* Live viewfinder */}
       <video
         ref={videoRef}
@@ -575,7 +578,11 @@ export function WalkSession({
         {/* Top: waypoint card (tap to open map) */}
         <div
           data-nogesture
-          className="flex-shrink-0 pointer-events-auto px-4 pt-[max(env(safe-area-inset-top),12px)]"
+          className="flex-shrink-0 pointer-events-auto pt-[max(env(safe-area-inset-top),12px)]"
+          style={{
+            paddingLeft: "max(env(safe-area-inset-left), 16px)",
+            paddingRight: "max(env(safe-area-inset-right), 16px)",
+          }}
         >
           <div className="flex items-center gap-2 mb-2">
             <span className="font-mono text-[11px] text-white/70 tracking-[0.05em] flex-shrink-0">
@@ -676,7 +683,12 @@ export function WalkSession({
         {/* Bottom: burst tray + actions */}
         <div
           data-nogesture
-          className="flex-shrink-0 pointer-events-auto px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 bg-gradient-to-t from-black/80 via-black/50 to-transparent"
+          className="flex-shrink-0 pointer-events-auto pt-3 bg-gradient-to-t from-black/80 via-black/50 to-transparent"
+          style={{
+            paddingLeft: "max(env(safe-area-inset-left), 16px)",
+            paddingRight: "max(env(safe-area-inset-right), 16px)",
+            paddingBottom: "max(env(safe-area-inset-bottom), 16px)",
+          }}
         >
           {/* Thumbnail tray */}
           {currentBurst.length > 0 ? (
