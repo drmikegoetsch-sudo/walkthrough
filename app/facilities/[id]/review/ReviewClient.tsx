@@ -169,12 +169,28 @@ export function ReviewClient({
         </div>
 
         {selectedWaypoint ? (
-          <div className="grid md:grid-cols-[1fr_300px] flex-1 min-h-0">
+          <div
+            className={cn(
+              "flex-1 min-h-0",
+              // Mobile: full-screen overlay on top of everything
+              "max-md:fixed max-md:inset-0 max-md:z-40 max-md:bg-ink max-md:flex max-md:flex-col",
+              // Desktop: inline split with sidebar
+              "md:grid md:grid-cols-[1fr_300px]",
+            )}
+            style={{
+              height: undefined,
+            }}
+          >
             {/* Main photo viewer */}
-            <div className="relative bg-ink flex flex-col min-h-0">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                <div>
-                  <div className="text-sm font-medium text-white">
+            <div className="relative bg-ink flex flex-col min-h-0 flex-1 md:flex-initial">
+              <div
+                className="flex items-center justify-between px-4 py-3 border-b border-white/10"
+                style={{
+                  paddingTop: "max(env(safe-area-inset-top), 12px)",
+                }}
+              >
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-white truncate">
                     {selectedWaypoint.label}
                   </div>
                   <div className="text-[11px] text-white/60 font-mono mt-0.5">
@@ -189,9 +205,10 @@ export function ReviewClient({
                   type="button"
                   onClick={closeWaypoint}
                   aria-label="Close"
-                  className="w-8 h-8 rounded-[var(--radius-sm)] text-white/70 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors"
+                  className="flex-shrink-0 h-9 px-3 rounded-full bg-white/10 hover:bg-white/15 text-white flex items-center gap-1.5 text-xs font-medium transition-colors"
                 >
-                  <X size={16} />
+                  <X size={14} />
+                  Close
                 </button>
               </div>
 
@@ -272,8 +289,8 @@ export function ReviewClient({
               ) : null}
             </div>
 
-            {/* Sidebar: floor plan nav */}
-            <div className="border-t md:border-t-0 md:border-l border-surface-3 bg-white flex flex-col">
+            {/* Sidebar: floor plan nav — hidden on mobile (photo viewer takes full screen) */}
+            <div className="hidden md:flex border-t md:border-t-0 md:border-l border-surface-3 bg-white flex-col">
               <div className="px-4 py-3 border-b border-surface-3 flex items-center justify-between">
                 <span className="text-xs font-medium text-ink-2">
                   Waypoints

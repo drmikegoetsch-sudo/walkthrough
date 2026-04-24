@@ -519,6 +519,19 @@ export function WalkSession({
     setIndex(targetIndex);
   }
 
+  function handleExit() {
+    if (finalizing) return;
+    if (hasAnyProgress) {
+      const ok = window.confirm(
+        "Exit walkthrough? Photos you captured are saved, but the session will stay open. You can resume later.",
+      );
+      if (!ok) return;
+    }
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    router.push(`/facilities/${facility.id}`);
+  }
+
   // ---- Render ----
   if (cameraState !== "ready" && cameraState !== "loading") {
     return (
@@ -585,6 +598,14 @@ export function WalkSession({
           }}
         >
           <div className="flex items-center gap-2 mb-2">
+            <button
+              type="button"
+              onClick={handleExit}
+              aria-label="Exit walkthrough"
+              className="flex-shrink-0 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white/90 hover:bg-black/70 active:scale-95 transition-all"
+            >
+              <X size={14} />
+            </button>
             <span className="font-mono text-[11px] text-white/70 tracking-[0.05em] flex-shrink-0">
               {index + 1}/{waypoints.length}
             </span>
