@@ -97,6 +97,9 @@ export function WalkSession({
   const [finishMissedOpen, setFinishMissedOpen] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
   const [showMapNudge, setShowMapNudge] = useState(false);
+  const [transitionDir, setTransitionDir] = useState<
+    "forward" | "back" | null
+  >(null);
 
   const current = waypoints[index];
   const currentBurst = current ? (burstByWaypoint[current.id] ?? []) : [];
@@ -393,12 +396,22 @@ export function WalkSession({
     if (currentBurst.length === 0) {
       setSkipped((prev) => new Set(prev).add(current.id));
     }
+    setTransitionDir("forward");
     setIndex((i) => Math.min(i + 1, waypoints.length - 1));
   }, [current, currentBurst.length, waypoints.length]);
 
   const goBack = useCallback(() => {
+    setTransitionDir("back");
     setIndex((i) => Math.max(i - 1, 0));
   }, []);
+
+  // Clear transition direction after the animation finishes so later re-renders
+  // (e.g. burst uploads completing) don't re-trigger it.
+  useEffect(() => {
+    if (transitionDir === null) return;
+    const t = setTimeout(() => setTransitionDir(null), 520);
+    return () => clearTimeout(t);
+  }, [transitionDir, current?.id]);
 
   // ---- Swipe gesture handling ----
   useEffect(() => {
@@ -628,9 +641,16 @@ export function WalkSession({
             </div>
           </div>
           <button
+            key={current.id}
             type="button"
             onClick={() => setMapOpen(true)}
-            className="w-full bg-black/40 backdrop-blur-md border border-white/10 rounded-[var(--radius-md)] px-3.5 py-2.5 flex items-center gap-3 text-left active:scale-[0.99] transition-transform"
+            className={cn(
+              "w-full bg-black/40 backdrop-blur-md border border-white/10 rounded-[var(--radius-md)] px-3.5 py-2.5 flex items-center gap-3 text-left active:scale-[0.99] transition-transform",
+              transitionDir === "forward" &&
+                "animate-[slideInRight_320ms_cubic-bezier(0.22,1,0.36,1)]",
+              transitionDir === "back" &&
+                "animate-[slideInLeft_320ms_cubic-bezier(0.22,1,0.36,1)]",
+            )}
             aria-label="Open facility map"
           >
             <div className="flex-1 min-w-0">
@@ -670,11 +690,42 @@ export function WalkSession({
             <Bracket className="bottom-0 left-0 -rotate-90" />
           </div>
 
+          {/* Center waypoint callout (flipbook transition) */}
+          {transitionDir ? (
+            <div
+              key={`callout-${current.id}`}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+            >
+              <div
+                className={cn(
+                  "bg-black/70 backdrop-blur-md border border-white/15 px-5 py-3 rounded-[var(--radius-lg)] text-center shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+                  transitionDir === "forward"
+                    ? "animate-[flipBadgeRight_500ms_cubic-bezier(0.22,1,0.36,1)_forwards]"
+                    : "animate-[flipBadgeLeft_500ms_cubic-bezier(0.22,1,0.36,1)_forwards]",
+                )}
+              >
+                <div className="text-[10px] uppercase tracking-[0.1em] font-mono text-white/60">
+                  {index + 1} of {waypoints.length}
+                </div>
+                <div className="text-base font-medium text-white mt-1 max-w-[220px] truncate">
+                  {current.label}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {/* Previous view thumbnail */}
           {referenceUrl ? (
             <div
+              key={`ref-${current.id}`}
               data-nogesture
-              className="absolute top-3 right-3 w-[110px] flex flex-col gap-1"
+              className={cn(
+                "absolute top-3 right-3 w-[110px] flex flex-col gap-1",
+                transitionDir === "forward" &&
+                  "animate-[slideInRight_320ms_cubic-bezier(0.22,1,0.36,1)]",
+                transitionDir === "back" &&
+                  "animate-[slideInLeft_320ms_cubic-bezier(0.22,1,0.36,1)]",
+              )}
             >
               <div className="flex items-center gap-1 text-[9px] uppercase tracking-[0.08em] font-mono text-white/80 bg-black/55 backdrop-blur-sm px-1.5 py-0.5 rounded-sm w-fit">
                 Previous view
@@ -713,7 +764,16 @@ export function WalkSession({
         >
           {/* Thumbnail tray */}
           {currentBurst.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto pb-2 mb-2 -mx-1 px-1">
+            <div
+              key={`tray-${current.id}`}
+              className={cn(
+                "flex gap-2 overflow-x-auto pb-2 mb-2 -mx-1 px-1",
+                transitionDir === "forward" &&
+                  "animate-[slideInRight_320ms_cubic-bezier(0.22,1,0.36,1)]",
+                transitionDir === "back" &&
+                  "animate-[slideInLeft_320ms_cubic-bezier(0.22,1,0.36,1)]",
+              )}
+            >
               {currentBurst.map((p) => (
                 <button
                   key={p.localId}
@@ -828,8 +888,8 @@ export function WalkSession({
         </div>
       </div>
 
-      {/* Shutter + nudge keyframes */}
-      <style jsx>{`
+      {/* Shutter + nudge + transition keyframes */}
+      <style jsx global>{`
         @keyframes fadeOut {
           from {
             opacity: 1;
@@ -846,6 +906,62 @@ export function WalkSession({
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(60px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-60px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes flipBadgeRight {
+          0% {
+            opacity: 0;
+            transform: translateX(90px) scale(0.85) rotate(6deg);
+          }
+          35% {
+            opacity: 1;
+            transform: translateX(0) scale(1.04) rotate(-1deg);
+          }
+          60% {
+            opacity: 1;
+            transform: translateX(0) scale(1) rotate(0deg);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-30px) scale(0.96) rotate(0deg);
+          }
+        }
+        @keyframes flipBadgeLeft {
+          0% {
+            opacity: 0;
+            transform: translateX(-90px) scale(0.85) rotate(-6deg);
+          }
+          35% {
+            opacity: 1;
+            transform: translateX(0) scale(1.04) rotate(1deg);
+          }
+          60% {
+            opacity: 1;
+            transform: translateX(0) scale(1) rotate(0deg);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(30px) scale(0.96) rotate(0deg);
           }
         }
       `}</style>
