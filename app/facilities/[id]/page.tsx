@@ -30,13 +30,38 @@ export default async function FacilityPage({
     .eq("facility_id", id)
     .order("sequence_order");
 
-  const { data: sessionRows } = await supabase
+  // Try with review_status first; fall back without it if the migration
+  // (0004_review_status.sql) hasn't been applied yet. Otherwise a missing
+  // column makes the whole query error and the UI shows "0 total".
+  let sessionRows:
+    | Array<{
+        id: string;
+        started_at: string;
+        completed_at: string | null;
+        status: string;
+        review_status?: string | null;
+        photos: { count: number }[] | null;
+      }>
+    | null = null;
+
+  const withReviewStatus = await supabase
     .from("walk_sessions")
     .select(
       "id, started_at, completed_at, status, review_status, photos(count)",
     )
     .eq("facility_id", id)
     .order("started_at", { ascending: false });
+
+  if (withReviewStatus.error) {
+    const fallback = await supabase
+      .from("walk_sessions")
+      .select("id, started_at, completed_at, status, photos(count)")
+      .eq("facility_id", id)
+      .order("started_at", { ascending: false });
+    sessionRows = fallback.data;
+  } else {
+    sessionRows = withReviewStatus.data;
+  }
 
   const sessions = (sessionRows ?? []).map((s) => ({
     id: s.id,

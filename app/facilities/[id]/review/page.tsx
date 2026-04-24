@@ -37,11 +37,25 @@ export default async function ReviewPage({
     .eq("facility_id", id)
     .order("captured_at", { ascending: false });
 
-  const { data: sessionRows } = await supabase
+  // Try with review_status, fall back without it if migration 0004 hasn't run.
+  let sessionRows:
+    | Array<{ id: string; started_at: string; review_status?: string | null }>
+    | null = null;
+  const withReviewStatus = await supabase
     .from("walk_sessions")
     .select("id, started_at, review_status")
     .eq("facility_id", id)
     .order("started_at", { ascending: false });
+  if (withReviewStatus.error) {
+    const fallback = await supabase
+      .from("walk_sessions")
+      .select("id, started_at")
+      .eq("facility_id", id)
+      .order("started_at", { ascending: false });
+    sessionRows = fallback.data;
+  } else {
+    sessionRows = withReviewStatus.data;
+  }
 
   const sessions = (sessionRows ?? []).map((s) => ({
     id: s.id,
