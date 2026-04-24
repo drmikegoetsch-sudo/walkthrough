@@ -193,13 +193,13 @@ export function WaypointEditor({
 
   return (
     <div className="bg-white border border-surface-3 rounded-[var(--radius-xl)] overflow-hidden shadow-[var(--shadow-sm)]">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-surface-3">
-        <div className="flex items-center gap-2 text-xs text-ink-3">
-          <span className="font-mono">Click map to add · drag to move</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-3 border-b border-surface-3">
+        <div className="flex items-center gap-2 text-[11px] sm:text-xs text-ink-3">
+          <span className="font-mono">Tap map to add · drag dot to move</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Badge tone={isDirty ? "warm" : "neutral"} dot={isDirty}>
-            {isDirty ? "Unsaved changes" : "All saved"}
+            {isDirty ? "Unsaved" : "All saved"}
           </Badge>
           <Button
             variant="ghost"
@@ -218,7 +218,7 @@ export function WaypointEditor({
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_260px] min-h-[480px]">
+      <div className="flex flex-col md:grid md:grid-cols-[1fr_260px] md:min-h-[480px]">
         <FloorPlan
           floorPlanUrl={floorPlanUrl}
           waypoints={dotWaypoints}
@@ -229,9 +229,10 @@ export function WaypointEditor({
           onSelect={setSelectedId}
         />
 
-        <div className="border-l border-surface-3 bg-white flex flex-col">
-          <div className="px-3 py-2.5 border-b border-surface-3 text-[11px] font-medium uppercase tracking-[0.06em] text-ink-3 font-mono">
-            Walk order
+        <div className="border-t md:border-t-0 md:border-l border-surface-3 bg-white flex flex-col max-h-[45vh] md:max-h-none">
+          <div className="px-3 py-2.5 border-b border-surface-3 text-[11px] font-medium uppercase tracking-[0.06em] text-ink-3 font-mono flex items-center justify-between">
+            <span>Walk order</span>
+            <span className="text-ink-4">{visible.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto">
             {visible.length === 0 ? (
@@ -280,27 +281,27 @@ export function WaypointEditor({
                           type="button"
                           onClick={() => handleReorder(w.id, -1)}
                           disabled={i === 0}
-                          className="p-1 rounded hover:bg-white text-ink-3 hover:text-ink-2 disabled:opacity-30"
+                          className="w-8 h-8 rounded-full hover:bg-white text-ink-3 hover:text-ink-2 disabled:opacity-30 flex items-center justify-center"
                           aria-label="Move up"
                         >
-                          <ArrowUp size={12} />
+                          <ArrowUp size={14} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleReorder(w.id, 1)}
                           disabled={i === visible.length - 1}
-                          className="p-1 rounded hover:bg-white text-ink-3 hover:text-ink-2 disabled:opacity-30"
+                          className="w-8 h-8 rounded-full hover:bg-white text-ink-3 hover:text-ink-2 disabled:opacity-30 flex items-center justify-center"
                           aria-label="Move down"
                         >
-                          <ArrowDown size={12} />
+                          <ArrowDown size={14} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(w.id)}
-                          className="p-1 rounded hover:bg-white text-ink-3 hover:text-[#b91c1c]"
+                          className="w-8 h-8 rounded-full hover:bg-white text-ink-3 hover:text-[#b91c1c] flex items-center justify-center"
                           aria-label="Delete"
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     )}
