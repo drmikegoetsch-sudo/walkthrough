@@ -79,7 +79,7 @@ export function SessionsList({ facilityId, sessions }: Props) {
                   )}
                 />
                 <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-ink-3 font-mono">
-                  Completed
+                  Completed walkthroughs
                 </span>
                 <span className="text-[11px] text-ink-4 font-mono">
                   {completed.length}
