@@ -982,12 +982,6 @@ function MapSheet({
   onPick: (idx: number) => void;
   onClose: () => void;
 }) {
-  const [aspect, setAspect] = useState<number | null>(() =>
-    facility.floorPlanWidth && facility.floorPlanHeight
-      ? facility.floorPlanWidth / facility.floorPlanHeight
-      : null,
-  );
-
   return (
     <div className="absolute inset-0 z-20 bg-ink/95 backdrop-blur-sm flex flex-col">
       <div className="flex items-center justify-between gap-3 px-4 pt-[max(env(safe-area-inset-top),12px)] pb-3 border-b border-white/10">
@@ -1007,24 +1001,22 @@ function MapSheet({
           Close map
         </button>
       </div>
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4">
-        <div
-          className="relative h-full w-auto max-w-full max-h-full"
-          style={{ aspectRatio: aspect ?? undefined }}
-        >
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4 min-h-0">
+        {/*
+          The container shrink-wraps the image at its natural aspect.
+          Dots positioned against this container always match the setup
+          editor's positioning (which uses the same pattern). Don't use
+          object-contain + a fixed aspectRatio here — if the DB's
+          floor_plan_width/height drifts from the image, letterboxing
+          throws dot coordinates off.
+        */}
+        <div className="relative inline-block max-w-full max-h-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={facility.floorPlanUrl}
             alt=""
             draggable={false}
-            onLoad={(e) => {
-              if (aspect) return;
-              const img = e.currentTarget;
-              if (img.naturalWidth && img.naturalHeight) {
-                setAspect(img.naturalWidth / img.naturalHeight);
-              }
-            }}
-            className="w-full h-full object-contain select-none"
+            className="block max-w-full max-h-full w-auto h-auto select-none"
             style={{ filter: "invert(0.92) hue-rotate(180deg) contrast(0.9)" }}
           />
           {waypoints.map((w, i) => {
