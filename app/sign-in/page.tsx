@@ -9,49 +9,64 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { cn } from "@/lib/cn";
 
-type Mode = "magic" | "password";
+type Mode = "signin" | "signup";
 
 export default function SignInPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("magic");
+  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [signupConfirmEmail, setSignupConfirmEmail] = useState<string | null>(
+    null,
+  );
 
-  async function handleMagicLink(e: React.FormEvent) {
+  async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
-    setSending(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    setSending(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setSent(true);
-  }
-
-  async function handlePassword(e: React.FormEvent) {
-    e.preventDefault();
-    setSending(true);
+    setSubmitting(true);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    setSending(false);
+    setSubmitting(false);
     if (error) {
       toast.error(error.message);
       return;
     }
     router.push("/dashboard");
     router.refresh();
+  }
+
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
+    setSubmitting(true);
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    // If email confirmation is required, Supabase returns a user with no
+    // session. In that case show a "check your email" state. Otherwise
+    // the user is already signed in and we go straight to the dashboard.
+    if (data.session) {
+      router.push("/dashboard");
+      router.refresh();
+    } else {
+      setSignupConfirmEmail(email);
+    }
   }
 
   return (
@@ -63,23 +78,32 @@ export default function SignInPage() {
             <div className="text-[17px] font-medium tracking-[-0.02em]">
               Soter Walkthrough
             </div>
-            <div className="text-xs text-ink-3">Sign in to continue</div>
+            <div className="text-xs text-ink-3">
+              {mode === "signup"
+                ? "Create your account"
+                : "Sign in to continue"}
+            </div>
           </div>
         </div>
 
-        {sent ? (
+        {signupConfirmEmail ? (
           <div className="flex flex-col gap-3 py-2">
             <div className="text-sm font-medium">Check your email</div>
             <div className="text-xs text-ink-3">
-              We sent a magic link to{" "}
-              <span className="font-mono">{email}</span>. Click it to sign in.
+              We sent a confirmation link to{" "}
+              <span className="font-mono">{signupConfirmEmail}</span>. Click it
+              to finish creating your account, then sign in.
             </div>
             <button
               type="button"
-              onClick={() => setSent(false)}
+              onClick={() => {
+                setSignupConfirmEmail(null);
+                setMode("signin");
+                setPassword("");
+              }}
               className="text-xs text-accent hover:text-accent-2 font-medium text-left"
             >
-              Use a different email
+              Back to sign in
             </button>
           </div>
         ) : (
@@ -87,57 +111,53 @@ export default function SignInPage() {
             {/* Mode toggle */}
             <div className="flex p-1 bg-surface-2 border border-surface-3 rounded-full">
               <ModeTab
-                active={mode === "magic"}
-                onClick={() => setMode("magic")}
+                active={mode === "signin"}
+                onClick={() => setMode("signin")}
               >
-                Magic link
+                Sign in
               </ModeTab>
               <ModeTab
-                active={mode === "password"}
-                onClick={() => setMode("password")}
+                active={mode === "signup"}
+                onClick={() => setMode("signup")}
               >
-                Password
+                Sign up
               </ModeTab>
             </div>
 
-            {mode === "magic" ? (
-              <form
-                onSubmit={handleMagicLink}
-                className="flex flex-col gap-3"
-              >
-                <EmailField email={email} setEmail={setEmail} />
-                <Button type="submit" variant="primary" disabled={sending}>
-                  {sending ? "Sending…" : "Send magic link"}
-                </Button>
-              </form>
-            ) : (
-              <form
-                onSubmit={handlePassword}
-                className="flex flex-col gap-3"
-              >
-                <EmailField email={email} setEmail={setEmail} />
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-medium text-ink-2">
-                    Password
-                  </span>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full border border-surface-3 rounded-[var(--radius-sm)] px-3 py-2.5 bg-surface text-sm text-ink placeholder:text-ink-4 focus:outline-none focus:border-accent transition-colors"
-                  />
-                </label>
-                <Button type="submit" variant="primary" disabled={sending}>
-                  {sending ? "Signing in…" : "Sign in"}
-                </Button>
-                <div className="text-[11px] text-ink-3 text-center">
-                  Need a password? Ask an admin to create your account in
-                  Supabase, or use a magic link above.
-                </div>
-              </form>
-            )}
+            <form
+              onSubmit={mode === "signup" ? handleSignUp : handleSignIn}
+              className="flex flex-col gap-3"
+            >
+              <EmailField email={email} setEmail={setEmail} />
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-ink-2">
+                  Password
+                </span>
+                <input
+                  type="password"
+                  required
+                  minLength={mode === "signup" ? 8 : undefined}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={
+                    mode === "signup" ? "At least 8 characters" : "••••••••"
+                  }
+                  autoComplete={
+                    mode === "signup" ? "new-password" : "current-password"
+                  }
+                  className="w-full border border-surface-3 rounded-[var(--radius-sm)] px-3 py-2.5 bg-surface text-sm text-ink placeholder:text-ink-4 focus:outline-none focus:border-accent transition-colors"
+                />
+              </label>
+              <Button type="submit" variant="primary" disabled={submitting}>
+                {submitting
+                  ? mode === "signup"
+                    ? "Creating account…"
+                    : "Signing in…"
+                  : mode === "signup"
+                    ? "Create account"
+                    : "Sign in"}
+              </Button>
+            </form>
           </>
         )}
       </Card>
